@@ -1,0 +1,59 @@
+#pragma once
+
+@Functions
+
+vec3 rgbToHSL(vec3 RGB)
+{
+    float lo = min(min(RGB.r, RGB.g), RGB.b);
+    float hi = max(max(RGB.r, RGB.g), RGB.b);
+    float L = (lo + hi) * 0.5;
+    if (lo == hi)
+        return vec3(-1., 0., L); // achromatic
+    float delta = hi - lo;
+    float S = (L <= 0.5) ? delta / (lo + hi) : delta / (2. - delta);
+    if (delta == 0.)
+        delta = 1.;
+    float H;
+    if (hi == RGB.r)
+        H = (RGB.g - RGB.b) / delta;
+    else if (hi == RGB.g)
+        H = (RGB.b - RGB.r) / delta + 2.;
+    else // RGB.b
+        H = (RGB.r - RGB.g) / delta + 4.;
+    H /= 6.;
+    if (H < 0.)
+        H += 1.;
+    return vec3(H, S, L);
+}
+
+float hslValue(float n1, float n2, float hue)
+{
+    if (hue > 6.)
+        hue -= 6.;
+    else if (hue < 0.)
+        hue += 6.;
+    if (hue < 1.)
+        return n1 + (n2 - n1) * hue;
+    else if (hue < 3.)
+        return n2;
+    else if (hue < 4.)
+        return n1 + (n2 - n1) * (4. - hue);
+    return n1;
+}
+
+vec3 hslToRGB(vec3 HSL)
+{
+    if (HSL.y == 0.)
+        return HSL.zzz; // achromatic
+    float m2;
+    if (HSL.z <= 0.5)
+        m2 = HSL.z * (1. + HSL.y);
+    else
+        m2 = HSL.z + HSL.y - HSL.z * HSL.y;
+    float m1 = 2. * HSL.z - m2;
+    vec3 RGB;
+    RGB.r = hslValue(m1, m2, HSL.x * 6. + 2.);
+    RGB.g = hslValue(m1, m2, HSL.x * 6.);
+    RGB.b = hslValue(m1, m2, HSL.x * 6. - 2.);
+    return RGB;
+}
